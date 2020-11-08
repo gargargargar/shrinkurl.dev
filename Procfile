@@ -1,2 +1,2 @@
-web: gunicorn app:flaskr
+web: gunicorn app:app
 heroku buildpacks:set heroku/python
