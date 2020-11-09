@@ -1,25 +1,71 @@
 import os
 import psycopg2
 
+# DATABASE_URL = os.environ['DATABASE_URL']
+DATABASE_URL = 'postgres://gtellzbmkxrytl:418b6e0bd48ce2944213cb9b9612326dcc49983d1174188e789ca92e9c37bb92@ec2-23-23-36-227.compute-1.amazonaws.com:5432/ddj1qckct2jsm2'
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+cursor = conn.cursor()
+
+def execute_non_query(command: str):
+    cursor.execute(command)
+    conn.commit()
+
+def execute_query(command: str):
+    cursor.execute(command)
+    return cursor.fetchall()
 
 def create_table():
-    # DATABASE_URL = os.environ['DATABASE_URL']
-    DATABASE_URL = "postgres://gtellzbmkxrytl:418b6e0bd48ce2944213cb9b9612326dcc49983d1174188e789ca92e9c37bb92@ec2-23-23-36-227.compute-1.amazonaws.com:5432/ddj1qckct2jsm2"
-    conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-
     create_command = """
         CREATE TABLE urls (
             url VARCHAR(2083) NOT NULL,
-            shrinked_hash VARCHAR(20) NOT NULL,
+            shrinked_hash VARCHAR(20) NOT NULL UNIQUE,
             PRIMARY KEY (url)
         )
         """
+    execute_non_query(create_command)
 
-    cur = conn.cursor()
-    cur.execute(create_command)
+def get_shrinked_hash(url: str):
+    query = f"""
+        SELECT shrinked_hash FROM urls WHERE url = '{url}'
+    """
 
-    cur.close()
-    conn.close()
+    result = execute_query(query)
+    if len(result) == 0:
+        return None
+    return result[0][0]
+
+def get_url(shrinked_hash: str):
+    query = f"""
+        SELECT url FROM urls WHERE shrinked_hash = '{shrinked_hash}'
+    """
+
+    result = execute_query(query)
+    if len(result) == 0:
+        return None
+    return result[0][0]
+
+def insert_url(url: str, shrinked_hash: str):
+    if get_shrinked_hash(url) is not None or get_url(shrinked_hash) is not None:
+        print('Insertion failed.')
+        return False
+
+    non_query = f"""
+        INSERT INTO urls
+        VALUES ('{url}', '{shrinked_hash}')
+    """
+    execute_non_query(non_query)
+
+    return True
 
 if __name__ == '__main__':
-    create_table()    
+    create_table()
+    insert_url('test1', 'abcdef')
+    insert_url('test2', 'abdejjk')
+    insert_url('test2', 'adnjdd')
+
+    print(get_shrinked_hash('test1'))
+    print(get_shrinked_hash('test2'))
+    print(get_url('abcdef'))
+
+    cursor.close()
+    conn.close()

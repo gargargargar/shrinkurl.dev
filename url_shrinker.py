@@ -1,51 +1,69 @@
 import string
-import random
-from secrets import token_urlsafe
+import validators
+import secrets
+import db
 
 default_length = 6
 
-def _generate_shrinked_url():
-    return token_urlsafe(int(default_length / 1.3))
+def _generate_shrinked_hash():
+    alphabet = string.ascii_letters + string.digits
 
-# def shrink_url(url: str):
-#     if url in self.url_to_short:
-#         # Return already-generated short url
-#         return self.url_to_short[url]
+    result = ''.join(secrets.choice(alphabet) for _ in range(default_length))
+    if db.get_url(result) is not None:
+        result = ''.join(secrets.choice(alphabet) for _ in range(default_length))
 
-#     # Generate new short url
-#     short_url = self._generate_short_url()
-#     while short_url in self.short_to_url:
-#         short_url = self._generate_short_url()
+    return result
 
-#     # TODO: replace with db commands
-#     self.url_to_short[url] = short_url
-#     self.short_to_url[short_url] = url
+def _validate_url(url: str):
+    # TODO: find better way; this ignores urls without https://
+    return validators.url(url)
 
-#     return short_url
+def _validate_hash(shrinked_hash: str): 
+    return shrinked_hash is not None and len(shrinked_hash) <= default_length and shrinked_hash.isalnum()
 
-# def redirect_url(shrinked_url: str):
-#     if short_url in self.short_to_url:
-#         return self.short_to_url[short_url]
+def shrink_url(url: str):
+    # Check if url is legal
+    if not _validate_url(url):
+        print('Url is not valid!')
+        return None
 
-#     return '404 Error'
+    # Check if url exists in db and return hash if it does
+    query_result = db.get_shrinked_hash(url)
+    if query_result is not None:
+        return query_result
+
+    # Generate new short url
+    shrinked_hash = _generate_shrinked_hash()
+
+    # Insert into db
+    db.insert_url(url, shrinked_hash)
+
+    return shrinked_hash
+
+def redirect_shrinked_hash(shrinked_hash: str):
+    # Check if shrinked_hash is legal
+    if not _validate_hash(shrinked_hash):
+        return None
+
+    return db.get_url(shrinked_hash)
 
 if __name__ == '__main__':
     for i in range(10):
-        print(_generate_shrinked_url())
-    # short_url_1 = url_shortener.create_url('google.com')
-    # short_url_2 = url_shortener.create_url('facebook.com')
-    # short_url_3 = url_shortener.create_url('piccollage.com')
-    # short_url_4 = url_shortener.create_url('yahoo.com')
+        print(_generate_shrinked_hash())
+    short_url_1 = shrink_url('https://google.com')
+    short_url_2 = shrink_url('https://facebook.com')
+    short_url_3 = shrink_url('https://piccollage.com')
+    short_url_4 = shrink_url('https://yahoo.com')
 
-    # print(short_url_1, short_url_2, short_url_3, short_url_4)
+    print(short_url_1, short_url_2, short_url_3, short_url_4)
 
-    # print(url_shortener.return_url(short_url_1))
-    # print(url_shortener.return_url(short_url_2))
-    # print(url_shortener.return_url(short_url_3))
-    # print(url_shortener.return_url(short_url_4))
+    print(redirect_shrinked_hash(short_url_1))
+    print(redirect_shrinked_hash(short_url_2))
+    print(redirect_shrinked_hash(short_url_3))
+    print(redirect_shrinked_hash(short_url_4))
 
-    # short_url_5 = url_shortener.create_url('facebook.com')
-    # print(short_url_5)
-    # print(url_shortener.return_url(short_url_5))
+    short_url_5 = shrink_url('https://facebook.com')
+    print(short_url_5)
+    print(redirect_shrinked_hash(short_url_5))
 
-    # print(url_shortener.return_url('errort'))
+    print(redirect_shrinked_hash('errort'))
