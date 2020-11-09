@@ -17,15 +17,19 @@ def homepage():
     result = url_shrinker.shrink_url(url)
 
     if result is None:
-        return 'URL is not valid! (Hint: you might\'ve forgotten to include https:// or http://'
-    return render_template('shrink_result.html', original_url=url, shrinked_url=request.url_root + result)
+        return render_template('message.html',
+            message='URL is not valid! (Hint: you might\'ve forgotten to include https:// or http://')
+        
+    return render_template('shrink_result.html',
+        original_url=url,
+        shrinked_url=request.url_root + result)
 
 @app.route('/<shrinked_hash>')
 def redirect(shrinked_hash):
     result = url_shrinker.redirect_shrinked_hash(shrinked_hash)
 
     if result is None:
-        return 'URL does not exist!'
+        return render_template('This shrinkurl does not exist!')
 
     return render_template('redirect.html', url=result)
 
