@@ -29,7 +29,8 @@ def redirect(shrinked_hash):
     result = url_shrinker.redirect_shrinked_hash(shrinked_hash)
 
     if result is None:
-        return render_template('This shrinkurl does not exist!')
+        return render_template('message.html',
+            message='This shrinkurl does not exist!')
 
     return render_template('redirect.html', url=result)
 
