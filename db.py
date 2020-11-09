@@ -58,13 +58,13 @@ def insert_url(url: str, shrinked_hash: str):
 
 if __name__ == '__main__':
     create_table()
-    insert_url('test1', 'abcdef')
-    insert_url('test2', 'abdejjk')
-    insert_url('test2', 'adnjdd')
+    # insert_url('test1', 'abcdef')
+    # insert_url('test2', 'abdejjk')
+    # insert_url('test2', 'adnjdd')
 
-    print(get_shrinked_hash('test1'))
-    print(get_shrinked_hash('test2'))
-    print(get_url('abcdef'))
+    # print(get_shrinked_hash('test1'))
+    # print(get_shrinked_hash('test2'))
+    # print(get_url('abcdef'))
 
     cursor.close()
     conn.close()
