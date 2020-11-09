@@ -9,7 +9,7 @@ app = Flask(__name__, instance_relative_config=True)
 db = SQLAlchemy(app)
 
 @app.route('/', methods=['GET', 'POST'])
-def hello():
+def homepage():
     if request.method == 'GET':
         return render_template('index.html')
     
@@ -17,8 +17,8 @@ def hello():
     result = url_shrinker.shrink_url(url)
 
     if result is None:
-        return 'URL is not valid!'
-    return result
+        return 'URL is not valid! (Hint: you might\'ve forgotten to include https:// or http://'
+    return render_template('shrink_result.html', original_url=url, shrinked_url=request.url_root + result)
 
 @app.route('/<shrinked_hash>')
 def redirect(shrinked_hash):
@@ -27,7 +27,7 @@ def redirect(shrinked_hash):
     if result is None:
         return 'URL does not exist!'
 
-    return result
+    return render_template('redirect.html', url=result)
 
 if __name__ == '__main__':
     app.run()
